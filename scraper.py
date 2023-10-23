@@ -57,7 +57,7 @@ with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
     csv_writer = csv.writer(csvfile)
 
     # write headers
-    csv_writer.writerow(['Professor Name', 'Rating', 'Comment'])
+    csv_writer.writerow(['Professor Name', 'Rating', 'Class', 'Comment'])
     for professor_id, professor_name in professor_names.items():
         print(f"Processing {professor_name}'s comments...")
 
@@ -74,17 +74,26 @@ with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
             soup = BeautifulSoup(response.content, 'html.parser')
             # print(response.content)
 
-            # find all comment div
-            comments_divs = soup.find_all('div', class_='Comments__StyledComments-dzzyvm-0 gRjWel')
-            comments = [div.get_text() for div in comments_divs]
+            # for each rating
+            ratings = soup.find_all('div', class_='Rating__StyledRating-sc-1rhvpxz-1 jcIQzP')
+            for rating in ratings:
+               
+                class_info_div = rating.find('div', class_='RatingHeader__StyledClass-sc-1dlkqw1-3 eXfReS')
+                class_info = class_info_div.get_text(strip=True) if class_info_div else 'N/A'
 
-            rating_div = soup.find('div', class_='RatingValue__Numerator-qw8sqy-2 liyUjw')
-            rating = rating_div.get_text(strip=True) if rating_div else 'N/A'  
+                comment_div = rating.find('div', class_='Comments__StyledComments-dzzyvm-0 gRjWel')
+                comment = comment_div.get_text(strip=True) if comment_div else 'N/A'
 
+                rating_div = rating.find('div', class_='RatingValues__RatingContainer-sc-6dc747-1 DObVa')
+                rating_value = 'N/A'
+                if rating_div:
+                    rating_number_div = rating_div.find('div', class_='CardNumRating__StyledCardNumRating-sc-17t4b9u-0 eWZmyX')
+                    rating_value = rating_number_div.get_text(strip=True) if rating_number_div else 'N/A'
 
-        #! write
-            for comment in comments:
-                csv_writer.writerow([professor_name, rating, comment])
+                # remove the word "Quality"
+                rating_value = rating_value.replace("Quality", "").strip()  # stripping extra whitespace after removal
+
+                csv_writer.writerow([professor_name, rating_value, class_info, comment])
         else:
             print(f"Failed to retrieve data for Professor {professor_name}.")
 
