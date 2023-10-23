@@ -57,7 +57,7 @@ with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
     csv_writer = csv.writer(csvfile)
 
     # write headers
-    csv_writer.writerow(['Professor Name', 'Comment'])
+    csv_writer.writerow(['Professor Name', 'Rating', 'Comment'])
     for professor_id, professor_name in professor_names.items():
         print(f"Processing {professor_name}'s comments...")
 
@@ -68,15 +68,23 @@ with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
         # check if success
         if response.status_code == 200:
             # html
+            # !test response html
+            # with open('response_content.txt', 'w', encoding='utf-8') as file:
+            #     file.write(response.text)   
             soup = BeautifulSoup(response.content, 'html.parser')
+            # print(response.content)
 
             # find all comment div
             comments_divs = soup.find_all('div', class_='Comments__StyledComments-dzzyvm-0 gRjWel')
             comments = [div.get_text() for div in comments_divs]
 
+            rating_div = soup.find('div', class_='RatingValue__Numerator-qw8sqy-2 liyUjw')
+            rating = rating_div.get_text(strip=True) if rating_div else 'N/A'  
+
+
         #! write
             for comment in comments:
-                csv_writer.writerow([professor_name, comment])
+                csv_writer.writerow([professor_name, rating, comment])
         else:
             print(f"Failed to retrieve data for Professor {professor_name}.")
 
